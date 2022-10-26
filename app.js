@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const { Builder, Browser, By, until, manage } = require('selenium-webdriver');
 const helperData = require('./helpers/HelperData');
-const appPort = 7000;
+const appPort = 8080;
 
 app.use('/', async (req, res) => {
     
@@ -13,13 +13,6 @@ app.use('/', async (req, res) => {
 
         await driver.get(urlBase + '/cruise-ships/mardi-gras.aspx');
         await driver.manage().window().maximize();
-        
-        driver.wait(function() {
-            return driver.executeScript('return document.readyState').then(function(readyState) {
-                return readyState === 'complete';
-            });
-        }, 1000);
-
         const imagesShip = await driver.findElements(By.className(`hero-img`));
 
         for (let i = 0; i < imagesShip.length; i++) {
@@ -36,23 +29,33 @@ app.use('/', async (req, res) => {
         const galleryImages = await driver.findElements(By.className('ships-modal-gallery__item-image'));
         const galleryTitles = await driver.findElements(By.className('ships-gallery-tile__title'));
         const galleryDescriptions = await driver.findElements(By.className('ships-gallery-tile__description'));
-
+        
         for (let i = 0; i < galleryImages.length; i++) {
             
             console.log(await galleryImages[i].getAttribute('src'));
             console.log(await galleryTitles[i].getText());
             console.log(await galleryDescriptions[i].getText());
-
+            
         }
-
+        
+        await driver.sleep(15000);
+        await driver.findElement(By.id("cookie-consent-btn")).click();
+        await driver.findElement(By.xpath('/html/body/div[3]/form/div[3]/header/nav/h2[6]/a')).click();
+        await driver.sleep(5000);
+        
         const deckPlans = await driver.findElement(By.xpath('/html/body/div[3]/form/div[3]/main/div/div[7]/div[4]/div/button'));
-        await deckPlans.submit();
-        await driver.wait(until(await driver.findElement(By.xpath('/html/body/div/div[3]/div/div[2]/div/div/ul/div/div[1]')).isDisplayed()));
-        const listPlans = await deckPlansList.findElements(By.name('li'));
+
+        await deckPlans.click();
+        await driver.sleep(20000);
+
+        const listPlans = await driver.findElements(By.className('white-focus'));
+
+        console.log(listPlans)
 
         for (let i = 0; i < listPlans.length; i++) {
 
-            await listPlans[i].findElement(By.name('a')).click();
+            await listPlans[i].click();
+            await driver.sleep(2000);
             
             const deckValues = await driver.findElement(By.className('deck-image'));
             Array.from(await deckValues.findElements(By.name('a')))
@@ -126,4 +129,5 @@ app.use('/', async (req, res) => {
 });
 
 app.listen(appPort, () => console.log(`App is running on port ${ appPort }`));
+        
         
